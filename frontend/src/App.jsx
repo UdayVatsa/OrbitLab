@@ -56,6 +56,29 @@ function App() {
     // TODO 3: Add the mesh to the scene
     scene.add(sphere);
 
+    // Creating Moon
+    const satelliteGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+    const satelliteMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff
+    });
+
+    let angle = 0;
+    const orbitRadius = 3;
+    const angularSpeed = 0.5;
+
+    const satellite = new THREE.Mesh(satelliteGeometry, satelliteMaterial);
+    satellite.position.set(3, 0, 0); // Redundant can be removed as satellite will still start from this position
+    scene.add(satellite);
+
+    // Creating orbit
+    const orbitGeometry = new THREE.CircleGeometry(orbitRadius, 100);
+    const orbitMaterial = new THREE.LineBasicMaterial({
+      color: 0xffffff
+    });
+    const orbit = new THREE.LineLoop(orbitGeometry, orbitMaterial);
+    orbit.rotation.x = Math.PI / 2;
+    scene.add(orbit);
+
     const light = new THREE.DirectionalLight(0xffffff, 3);
 
     light.position.set(5, 3, 5);
@@ -68,11 +91,16 @@ function App() {
     let animationId;
     const clock = new THREE.Clock();
 
+
     function animate() {
       animationId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
+      
+      sphere.rotation.y += angularSpeed * delta;
 
-      sphere.rotation.y += 0.5 * delta;
+      angle += angularSpeed * delta;
+      satellite.position.x = orbitRadius * Math.cos(angle);
+      satellite.position.z = orbitRadius * Math.sin(angle);
 
       renderer.render(scene, camera);
     }
@@ -89,6 +117,11 @@ function App() {
       material.dispose();
       earthTexture.dispose();
       renderer.dispose();
+      satelliteGeometry.dispose();
+      satelliteMaterial.dispose();
+
+      orbitGeometry.dispose();
+      orbitMaterial.dispose();
     };
 
   }, []);
