@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 function App() {
   const mountRef = useRef(null);
+  const orbitGroupRef = useRef(null);  //added now
 
-
+  const [inclination, setInclination] = useState(30);
   useEffect(() => {
 
     const width = window.innerWidth;
@@ -42,7 +43,7 @@ function App() {
       }
     );
 
-    // TODO 1: Create a blue MeshStandardMaterial
+    // TODO 1: Create a earthTexture MeshStandardMaterial
     const material = new THREE.MeshStandardMaterial({
       map: earthTexture,
       roughness: 1,
@@ -62,13 +63,13 @@ function App() {
       color: 0xffffff
     });
 
+    const satellite = new THREE.Mesh(satelliteGeometry, satelliteMaterial);
+    satellite.position.set(3, 0, 0); // Redundant can be removed as satellite will still start from this position
+
+
     let angle = 0;
     const orbitRadius = 3;
     const angularSpeed = 0.5;
-
-    const satellite = new THREE.Mesh(satelliteGeometry, satelliteMaterial);
-    satellite.position.set(3, 0, 0); // Redundant can be removed as satellite will still start from this position
-    scene.add(satellite);
 
     // Creating orbit
     const orbitGeometry = new THREE.CircleGeometry(orbitRadius, 100);
@@ -77,14 +78,23 @@ function App() {
     });
     const orbit = new THREE.LineLoop(orbitGeometry, orbitMaterial);
     orbit.rotation.x = Math.PI / 2;
-    scene.add(orbit);
 
+    // Creating Orbit Group
+    const orbitGroup = new THREE.Group();
+    orbitGroup.add(orbit);
+    orbitGroup.add(satellite);
+    orbitGroup.rotation.x = THREE.MathUtils.degToRad(inclination);
+    orbitGroupRef.current = orbitGroup;   // added now
+    scene.add(orbitGroup);
+
+
+
+    // Creating Light
     const light = new THREE.DirectionalLight(0xffffff, 3);
-
     light.position.set(5, 3, 5);
-
     scene.add(light);
 
+    // Creating Axis
     const axesHelper = new THREE.AxesHelper(3);
     scene.add(axesHelper);
 
@@ -95,7 +105,7 @@ function App() {
     function animate() {
       animationId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
-      
+
       sphere.rotation.y += angularSpeed * delta;
 
       angle += angularSpeed * delta;
@@ -126,11 +136,33 @@ function App() {
 
   }, []);
 
+  // added now
+  useEffect(() =>{
+    if(orbitGroupRef.current){
+      orbitGroupRef.current.rotation.x = THREE.MathUtils.degToRad(inclination);
+    }
+  },[inclination]);
+
+
+
+  // Return JSX of App component
   return (
-    <div
-      ref={mountRef}
-      style={{ width: '100vw', height: '100vh' }}
-    />
+    <div>
+      <input
+        type="range"
+        min="0"
+        max="180"
+        value={inclination}
+        onChange={(e) => setInclination(Number(e.target.value))}
+      />
+
+      <p>Inclination: {inclination}°</p>
+
+      <div
+        ref={mountRef}
+        style={{ width: '100vw', height: '100vh' }}
+      />
+    </div>
   );
 }
 
