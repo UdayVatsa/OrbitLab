@@ -3,9 +3,13 @@ import * as THREE from 'three';
 
 function App() {
   const mountRef = useRef(null);
-  const orbitGroupRef = useRef(null);  //added now
+  const orbitGroupRef = useRef(null);
+  const PauseRef = useRef(null);
+
 
   const [inclination, setInclination] = useState(30);
+  const [pause, setPause] = useState(false);
+
   useEffect(() => {
 
     const width = window.innerWidth;
@@ -105,17 +109,21 @@ function App() {
     function animate() {
       animationId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
+      
+      if (!PauseRef.current) {
+        
+        sphere.rotation.y += angularSpeed * delta;
 
-      sphere.rotation.y += angularSpeed * delta;
-
-      angle += angularSpeed * delta;
-      satellite.position.x = orbitRadius * Math.cos(angle);
-      satellite.position.z = orbitRadius * Math.sin(angle);
+        angle += angularSpeed * delta;
+        satellite.position.x = orbitRadius * Math.cos(angle);
+        satellite.position.z = orbitRadius * Math.sin(angle);
+      }
 
       renderer.render(scene, camera);
     }
 
     animate();
+
 
     mountRef.current.appendChild(renderer.domElement);
 
@@ -137,11 +145,16 @@ function App() {
   }, []);
 
   // added now
-  useEffect(() =>{
-    if(orbitGroupRef.current){
+  useEffect(() => {
+    if (orbitGroupRef.current) {
       orbitGroupRef.current.rotation.x = THREE.MathUtils.degToRad(inclination);
     }
-  },[inclination]);
+  }, [inclination]);
+
+// Implementation of Pause button
+useEffect(() => {
+   PauseRef.current = pause;
+},[pause])
 
 
 
@@ -157,6 +170,9 @@ function App() {
       />
 
       <p>Inclination: {inclination}°</p>
+      <button onClick={() => setPause(prev => !prev)}>
+        {pause ? "Resume":"Pause"}
+      </button>
 
       <div
         ref={mountRef}
